@@ -1,34 +1,54 @@
-import { createHTTPServer } from "@trpc/server/adapters/standalone";
 import { publicProcedure, router } from "./trpc";
-import z from "zod";
+import { z } from "zod";
+import { createHTTPServer } from "@trpc/server/adapters/standalone";
 
-const todoInputSchema = z.object({
-  title: z.string(),
-  description: z.string(),
-  done: z.boolean().optional()
-});
+let app;
 
 const appRouter = router({
-  createTodo: publicProcedure.input(todoInputSchema).mutation(async (opts) => {
-    console.log("hellow orld");
-    const title = opts.input.title;
-    const description = opts.input.description;
+  signUp: publicProcedure
+    .input(
+      z.object({
+        email: z.string(),
+        password: z.string()
+      })
+    )
+    .mutation(async (opts) => {
+      // context
+      let email = opts.input.email;
+      let password = opts.input.password;
 
-    // Do db stuff here
+      // Do validations here
+      // Do database stuff here
 
-    return {
-      id: "1",
-      title,
-      description
-    };
-  })
+      let token = "123123";
+      return {
+        token
+      };
+    }),
+  createTodo: publicProcedure
+    .input(
+      z.object({
+        title: z.string()
+      })
+    )
+    .mutation(async (opts) => {
+      console.log(opts.ctx.username);
+      return {
+        id: "1"
+      };
+    })
 });
 
-// Export type router type signature,
-// NOT the router itself.
-
 const server = createHTTPServer({
-  router: appRouter
+  router: appRouter,
+  createContext(opts) {
+    let authHeader = opts.req.headers["authorization"];
+    console.log(authHeader);
+    //jwt.verify()
+    return {
+      username: "123"
+    };
+  }
 });
 
 server.listen(3000);
